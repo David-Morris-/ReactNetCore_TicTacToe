@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .game-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .game-status {
+            margin: 1rem 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #555;
+            min-height: 1.5rem;
+        }
+
+        .winner {
+            color: #28a745;
+        }
+
+        .current-player {
+            color: #007bff;
+        }
+
+        .draw {
+            color: #ffc107;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 2rem 0;
+        }
+
+        .game-cell {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #495057;
+        }
+
+        .game-cell:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .game-cell.taken {
+            cursor: not-allowed;
+            background: #ffffff;
+        }
+
+        .game-cell.X {
+            color: #dc3545;
+        }
+
+        .game-cell.O {
+            color: #007bff;
+        }
+
+        .new-game-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .new-game-btn:hover {
+            background: #218838;
+        }
+
+        .new-game-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .game-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            font-size: 0.8rem;
+            color: #666;
+            max-width: 250px;
+            z-index: 1000;
+            border: 1px solid #e0e0e0;
+        }
+
+        .watermark-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .watermark-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+            border: 2px solid #007bff;
+        }
+
+        .watermark-name {
+            font-weight: bold;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .watermark-title {
+            font-size: 0.75rem;
+            color: #666;
+            margin: 2px 0;
+        }
+
+        .watermark-location {
+            font-size: 0.75rem;
+            color: #888;
+            margin: 2px 0;
+        }
+
+        .watermark-linkedin {
+            margin-top: 8px;
+        }
+
+        .watermark-linkedin a {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .watermark-linkedin a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Tic Tac Toe</h1>
+
+        <div id="game-status" class="game-status">Loading game...</div>
+
+        <div id="game-board" class="game-board">
+            <!-- Game board will be populated by JavaScript -->
+        </div>
+
+        <button id="new-game-btn" class="new-game-btn">New Game</button>
+
+        <div class="game-info">
+            <p>Click on any cell to make your move!</p>
+            <p id="game-id-display">Game ID: -</p>
+        </div>
+    </div>
+
+    <!-- Watermark with LinkedIn Profile Information -->
+    <div class="watermark">
+        <div class="watermark-header">
+            <img src="profile_photo.jpeg"
+                 alt="David Morris Profile Photo"
+                 class="watermark-photo">
+            <div>
+                <div class="watermark-name">David Morris</div>
+                <div class="watermark-title">Software Engineer</div>
+                <div class="watermark-location">Florida Area / Remote</div>
+            </div>
+        </div>
+        <div class="watermark-linkedin">
+            <a href="https://www.linkedin.com/in/david-morris-b738b48/" target="_blank" rel="noopener noreferrer">
+                🔗 View LinkedIn Profile
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentGame = null;
+        let currentPlayer = null;
+        let gameId = null;
+        const API_BASE = 'http://localhost:5264'; // Update this to match your .NET API URL
+
+        // DOM elements
+        const gameStatus = document.getElementById('game-status');
+        const gameBoard = document.getElementById('game-board');
+        const newGameBtn = document.getElementById('new-game-btn');
+        const gameIdDisplay = document.getElementById('game-id-display');
+
+        // Initialize the game
+        async function initGame() {
+            try {
+                // For demo purposes, we'll use fixed player IDs
+                // In a real app, these would come from user authentication
+                const player1Id = 'player1';
+                const player2Id = 'player2';
+
+                const response = await fetch(`${API_BASE}/games`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ player1Id, player2Id })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                currentGame = await response.json();
+                gameId = currentGame.id;
+                gameIdDisplay.textContent = `Game ID: ${gameId}`;
+
+                renderBoard();
+                updateGameStatus();
+            } catch (error) {
+                console.error('Error initializing game:', error);
+                gameStatus.textContent = 'Error connecting to server. Make sure the API is running.';
+                gameStatus.className = 'game-status draw';
+            }
+        }
+
+        // Render the game board
+        function renderBoard() {
+            gameBoard.innerHTML = '';
+
+            currentGame.state.board.forEach((cell, index) => {
+                const cellElement = document.createElement('div');
+                cellElement.className = `game-cell ${cell ? 'taken ' + cell : ''}`;
+                cellElement.textContent = cell || '';
+
+                if (!cell && !currentGame.isGameOver && currentGame.currentPlayerId === getCurrentPlayerId()) {
+                    cellElement.addEventListener('click', () => makeMove(index));
+                }
+
+                gameBoard.appendChild(cellElement);
+            });
+        }
+
+        // Make a move
+        async function makeMove(position) {
+            if (currentGame.isGameOver) return;
+
+            try {
+                const moveRequest = {
+                    position: position,
+                    playerId: getCurrentPlayerId()
+                };
+
+                const response = await fetch(`${API_BASE}/games/${gameId}/moves`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(moveRequest)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to make move');
+                }
+
+                currentGame = await response.json();
+                renderBoard();
+                updateGameStatus();
+
+                if (currentGame.isGameOver) {
+                    newGameBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error making move:', error);
+                alert(error.message);
+            }
+        }
+
+        // Update game status display
+        function updateGameStatus() {
+            if (currentGame.isGameOver) {
+                if (currentGame.winner) {
+                    const winnerSymbol = currentGame.winner === 'player1' ? 'X' : 'O';
+                    gameStatus.textContent = `Player ${winnerSymbol} wins! 🎉`;
+                    gameStatus.className = 'game-status winner';
+                } else if (currentGame.isDraw) {
+                    gameStatus.textContent = "It's a draw! 🤝";
+                    gameStatus.className = 'game-status draw';
+                }
+            } else {
+                const currentSymbol = currentGame.currentPlayerSymbol;
+                gameStatus.textContent = `Player ${currentSymbol}'s turn`;
+                gameStatus.className = 'game-status current-player';
+            }
+        }
+
+        // Get current player ID (for demo purposes)
+        function getCurrentPlayerId() {
+            // In a real app, this would be determined by user authentication
+            return currentGame.currentPlayerId;
+        }
+
+        // New game button handler
+        async function startNewGame() {
+            newGameBtn.disabled = true;
+            await initGame();
+        }
+
+        // Event listeners
+        newGameBtn.addEventListener('click', startNewGame);
+
+        // Initialize game on page load
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
